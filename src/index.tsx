@@ -46,8 +46,12 @@ export interface MSALRemoveAccountParams extends MSALParams {
   accountIdentifier: string;
 }
 
+export interface MSALClientOptions {
+  iosRedirectUri?: string;
+}
+
 export default class MSALClient {
-  constructor(private clientId: string) {}
+  constructor(private clientId: string, private options?: MSALClientOptions) {}
 
   /**
    * Acquire a token interactively
@@ -70,6 +74,7 @@ export default class MSALClient {
       extraQueryParameters,
       extraScopesToConsent,
       ...rest,
+      ...this.options,
     });
   };
 
@@ -86,6 +91,7 @@ export default class MSALClient {
       clientId: this.clientId,
       forceRefresh,
       ...rest,
+      ...this.options,
     });
   };
 
@@ -96,6 +102,6 @@ export default class MSALClient {
    * otherwise rejects
    */
   public removeAccount = (params: MSALRemoveAccountParams): Promise<void> => {
-    return RNMSAL.removeAccount({ clientId: this.clientId, ...params });
+    return RNMSAL.removeAccount({ clientId: this.clientId, ...params, ...this.options });
   };
 }

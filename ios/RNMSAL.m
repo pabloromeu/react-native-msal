@@ -26,6 +26,7 @@ RCT_REMAP_METHOD(acquireToken,
         NSString *clientId = [RCTConvert NSString:params[@"clientId"]];
         NSString *authority = [RCTConvert NSString:params[@"authority"]];
         NSArray<NSString *> *scopes = [RCTConvert NSStringArray:params[@"scopes"]];
+        NSString *redirectUri = [RCTConvert NSString:params[@"iosRedirectUri"]];
 
         // Optional parameters which have default values, so we don't have to check if nil
         NSUInteger promptType = [RCTConvert NSUInteger:params[@"promptType"]];
@@ -33,7 +34,10 @@ RCT_REMAP_METHOD(acquireToken,
         NSDictionary<NSString*,NSString*> *extraQueryParameters = [RCTConvert NSDictionary:params[@"extraQueryParameters"]];
         NSArray<NSString *> *extraScopesToConsent = [RCTConvert NSStringArray:params[@"extraScopesToConsent"]];
 
-        MSALPublicClientApplication *application = [RNMSAL createClientApplicationWithClientId:clientId authority:authority error:&msalError];
+        MSALPublicClientApplication *application = [RNMSAL createClientApplicationWithClientId:clientId
+                                                                                   redirectUri:redirectUri
+                                                                                     authority:authority
+                                                                                         error:&msalError];
 
         if (msalError) {
             @throw(msalError);
@@ -49,7 +53,8 @@ RCT_REMAP_METHOD(acquireToken,
         interactiveParams.extraScopesToConsent = extraScopesToConsent;
 
         // Send request
-        [application acquireTokenWithParameters:interactiveParams completionBlock:^(MSALResult * _Nullable result, NSError * _Nullable error) {
+        [application acquireTokenWithParameters:interactiveParams
+                                completionBlock:^(MSALResult * _Nullable result, NSError * _Nullable error) {
             if (!error) {
                 resolve([self MSALResultToDictionary:result withAuthority:authority]);
             } else {
@@ -74,11 +79,15 @@ RCT_REMAP_METHOD(acquireTokenSilent,
         NSString *authority = [RCTConvert NSString:params[@"authority"]];
         NSArray<NSString *> *scopes = [RCTConvert NSStringArray:params[@"scopes"]];
         NSString *accountIdentifier = [RCTConvert NSString:params[@"accountIdentifier"]];
+        NSString *redirectUri = [RCTConvert NSString:params[@"iosRedirectUri"]];
 
         // Optional parameters which have default values, so we don't have to check if nil
         BOOL forceRefresh = [RCTConvert BOOL:params[@"forceRefresh"]];
 
-        MSALPublicClientApplication *application = [RNMSAL createClientApplicationWithClientId:clientId authority:authority error:&msalError];
+        MSALPublicClientApplication *application = [RNMSAL createClientApplicationWithClientId:clientId
+                                                                                   redirectUri:redirectUri
+                                                                                     authority:authority
+                                                                                         error:&msalError];
 
         if (msalError) {
             @throw(msalError);
@@ -95,7 +104,8 @@ RCT_REMAP_METHOD(acquireTokenSilent,
         silentParams.forceRefresh = forceRefresh;
 
         // Send request
-        [application acquireTokenSilentWithParameters:silentParams completionBlock:^(MSALResult * _Nullable result, NSError * _Nullable error) {
+        [application acquireTokenSilentWithParameters:silentParams
+                                      completionBlock:^(MSALResult * _Nullable result, NSError * _Nullable error) {
             if (!error) {
                 resolve([self MSALResultToDictionary:result withAuthority:authority]);
             } else {
@@ -122,8 +132,12 @@ RCT_REMAP_METHOD(removeAccount,
         NSString *authority = [RCTConvert NSString:params[@"authority"]];
         NSString *clientId = [RCTConvert NSString:params[@"clientId"]];
         NSString *accountIdentifier = [RCTConvert NSString:params[@"accountIdentifier"]];
+        NSString *redirectUri = [RCTConvert NSString:params[@"iosRedirectUri"]];
 
-        MSALPublicClientApplication* application = [RNMSAL createClientApplicationWithClientId:clientId authority:authority error:&msalError];
+        MSALPublicClientApplication* application = [RNMSAL createClientApplicationWithClientId:clientId
+                                                                                   redirectUri:redirectUri
+                                                                                     authority:authority
+                                                                                         error:&msalError];
 
         if (msalError) {
             @throw msalError;
@@ -170,22 +184,25 @@ RCT_REMAP_METHOD(removeAccount,
     return [dict mutableCopy];
 }
 
-+ (MSALPublicClientApplication* )createClientApplicationWithClientId:(NSString*)clientId
-                                                           authority:(NSString*)authority
++ (MSALPublicClientApplication* )createClientApplicationWithClientId:(nonnull NSString*)clientId
+                                                         redirectUri:(nullable NSString*)redirectUri
+                                                           authority:(nullable NSString*)authority
                                                                error:(NSError* __autoreleasing*)error
 {
     NSError *_error;
     NSURL *authorityUrl = [NSURL URLWithString:authority];
     MSALAuthority *msalAuthority = [MSALAuthority authorityWithURL:authorityUrl error:&_error];
 
-    MSALPublicClientApplicationConfig *applicationConfig = [[MSALPublicClientApplicationConfig alloc] initWithClientId:clientId];
-    applicationConfig.authority = msalAuthority;
+    MSALPublicClientApplicationConfig *applicationConfig =
+        [[MSALPublicClientApplicationConfig alloc] initWithClientId:clientId
+                                                        redirectUri:redirectUri
+                                                          authority:msalAuthority];
     applicationConfig.knownAuthorities = @[msalAuthority];
 
-    MSALPublicClientApplication *clientApplication = [[MSALPublicClientApplication alloc] initWithConfiguration:applicationConfig error:&_error];
+    MSALPublicClientApplication *clientApplication = [[MSALPublicClientApplication alloc] initWithConfiguration:applicationConfig
+                                                                                                          error:&_error];
 
-    if (_error != nil)
-    {
+    if (_error) {
         *error = _error;
     }
 

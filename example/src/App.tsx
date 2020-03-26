@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { StyleSheet, Text, Button, SafeAreaView, ScrollView } from 'react-native';
-import MSALCLient, { MSALResult } from 'react-native-msal';
+import MSALCLient, { MSALResult, MSALPromptType } from 'react-native-msal';
 
 // Example config, modify to your needs
 const msalConfig = {
@@ -9,9 +9,10 @@ const msalConfig = {
   pswdResetAuthority:
     'https://<TENANT_NAME>.b2clogin.com/tfp/<TENANT_NAME>.onmicrosoft.com/B2C_1A_PasswordReset_Native',
   scopes: ['https://<TENANT_NAME>.onmicrosoft.com/api/user_impersonation'],
+  iosRedirectUri: 'msauth.com.example://auth',
 };
 
-const msalClient = new MSALCLient(msalConfig.clientId);
+const msalClient = new MSALCLient(msalConfig.clientId, { iosRedirectUri: msalConfig.iosRedirectUri });
 
 export default function App() {
   const [authResult, setAuthResult] = React.useState<MSALResult | null>(null);
@@ -25,6 +26,7 @@ export default function App() {
       const res = await msalClient.acquireToken({
         authority: msalConfig.sisuAuthority,
         scopes: msalConfig.scopes,
+        promptType: MSALPromptType.SELECT_ACCOUNT,
       });
       handleResult(res);
     } catch (error) {
@@ -46,6 +48,7 @@ export default function App() {
       }
     }
   };
+
   const removeAccount = async () => {
     if (authResult) {
       try {

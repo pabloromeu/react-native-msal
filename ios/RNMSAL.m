@@ -43,10 +43,13 @@ RCT_REMAP_METHOD(acquireToken,
             @throw(msalError);
         }
 
-        // Configure interactive token parameters
         UIViewController *viewController = [UIViewController currentViewController];
+
         MSALWebviewParameters *webParameters = [[MSALWebviewParameters alloc] initWithParentViewController:viewController];
-        MSALInteractiveTokenParameters *interactiveParams = [[MSALInteractiveTokenParameters alloc] initWithScopes:scopes webviewParameters:webParameters];
+        webParameters.webviewType = MSALWebviewTypeWKWebView;
+
+        MSALInteractiveTokenParameters *interactiveParams = [[MSALInteractiveTokenParameters alloc] initWithScopes:scopes
+                                                                                                 webviewParameters:webParameters];
         interactiveParams.promptType = promptType;
         interactiveParams.loginHint = loginHint;
         interactiveParams.extraQueryParameters = extraQueryParameters;
